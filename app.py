@@ -17,7 +17,7 @@ def get_base64_image(image_path):
     with open(image_path, "rb") as img_file:
         return base64.b64encode(img_file.read()).decode()
 
-img_base64 = get_base64_image(r"D:\Internship\labmentix\cricbuzz\Coding\Cricbuzz_project\image.png")
+img_base64 = get_base64_image(r"image.png")
 
 # -------------------------------
 # PREMIUM BACKGROUND + UI
