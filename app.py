@@ -237,7 +237,24 @@ elif page == "Manage Players":
     )
     """)
     conn.commit()
-
+# ---------------- DEFAULT DATA INSERT ----------------
+    cursor.execute("SELECT COUNT(*) FROM players")
+    count = cursor.fetchone()[0]
+    
+    if count == 0:
+        sample_players = [
+            ("Virat Kohli", "India", 12000, 5),
+            ("Rohit Sharma", "India", 10000, 8),
+            ("Joe Root", "England", 9500, 12),
+            ("Steve Smith", "Australia", 9000, 15)
+        ]
+    
+        cursor.executemany(
+            "INSERT INTO players (name, team, runs, wickets) VALUES (?, ?, ?, ?)",
+            sample_players
+        )
+        conn.commit()
+    
     # ---------------- CREATE ----------------
     st.subheader("➕ Add New Player")
 
