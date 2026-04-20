@@ -206,10 +206,10 @@ elif page == "Analytics":
     st.dataframe(status_counts.reset_index().rename(columns={'index':'Status',0:'Count'}))
 
 # -------------------------------
-# CRUD PAGE
+# PREMIUM CRUD PAGE
 # -------------------------------
 elif page == "Manage Players":
-    st.title("🛠️ Manage Players (CRUD Operations)")
+    st.title("🛠️ Player Management System")
 
     conn = sqlite3.connect("cricket.db", check_same_thread=False)
     cursor = conn.cursor()
@@ -226,41 +226,70 @@ elif page == "Manage Players":
     """)
     conn.commit()
 
-    # CREATE
-    st.subheader("➕ Add Player")
-    name = st.text_input("Player Name")
-    team = st.text_input("Team")
-    runs = st.number_input("Runs", min_value=0)
-    wickets = st.number_input("Wickets", min_value=0)
+    # ---------------- CREATE ----------------
+    st.subheader("➕ Add New Player")
+
+    col1, col2 = st.columns(2)
+    name = col1.text_input("Player Name")
+    team = col2.text_input("Team")
+
+    col3, col4 = st.columns(2)
+    runs = col3.number_input("Runs", min_value=0)
+    wickets = col4.number_input("Wickets", min_value=0)
 
     if st.button("Add Player"):
-        cursor.execute("INSERT INTO players (name, team, runs, wickets) VALUES (?, ?, ?, ?)",
-                       (name, team, runs, wickets))
-        conn.commit()
-        st.success("Player added!")
+        if name and team:
+            cursor.execute(
+                "INSERT INTO players (name, team, runs, wickets) VALUES (?, ?, ?, ?)",
+                (name, team, runs, wickets)
+            )
+            conn.commit()
+            st.success("✅ Player added successfully!")
+        else:
+            st.error("⚠️ Please fill all fields")
 
-    # READ
-    st.subheader("📋 Player Data")
+    # ---------------- READ ----------------
+    st.subheader("📋 Player Records")
     df_players = pd.read_sql("SELECT * FROM players", conn)
     st.dataframe(df_players, use_container_width=True)
 
-    # UPDATE
+    # ---------------- UPDATE ----------------
     st.subheader("✏️ Update Player")
-    update_id = st.number_input("Enter ID", min_value=1, key="update_id")
-    new_runs = st.number_input("New Runs", min_value=0, key="new_runs")
-    new_wickets = st.number_input("New Wickets", min_value=0, key="new_wickets")
 
-    if st.button("Update Player"):
-        cursor.execute("UPDATE players SET runs=?, wickets=? WHERE id=?",
-                       (new_runs, new_wickets, update_id))
-        conn.commit()
-        st.success("Updated successfully!")
+    if not df_players.empty:
+        player_options = df_players["name"] + " (ID: " + df_players["id"].astype(str) + ")"
+        selected_player = st.selectbox("Select Player", player_options)
 
-    # DELETE
+        selected_id = int(selected_player.split("ID: ")[1].replace(")", ""))
+
+        player_data = df_players[df_players["id"] == selected_id].iloc[0]
+
+        col5, col6 = st.columns(2)
+        new_runs = col5.number_input("Update Runs", value=int(player_data["runs"]))
+        new_wickets = col6.number_input("Update Wickets", value=int(player_data["wickets"]))
+
+        if st.button("Update Player"):
+            cursor.execute(
+                "UPDATE players SET runs=?, wickets=? WHERE id=?",
+                (new_runs, new_wickets, selected_id)
+            )
+            conn.commit()
+            st.success("✅ Player updated successfully!")
+
+    else:
+        st.info("No players available to update.")
+
+    # ---------------- DELETE ----------------
     st.subheader("🗑️ Delete Player")
-    delete_id = st.number_input("Delete ID", min_value=1, key="delete_id")
 
-    if st.button("Delete Player"):
-        cursor.execute("DELETE FROM players WHERE id=?", (delete_id,))
-        conn.commit()
-        st.warning("Deleted successfully!")
+    if not df_players.empty:
+        delete_player = st.selectbox("Select Player to Delete", player_options, key="delete")
+
+        delete_id = int(delete_player.split("ID: ")[1].replace(")", ""))
+
+        if st.button("Delete Player"):
+            cursor.execute("DELETE FROM players WHERE id=?", (delete_id,))
+            conn.commit()
+            st.warning("⚠️ Player deleted successfully!")
+    else:
+        st.info("No players available to delete.")
