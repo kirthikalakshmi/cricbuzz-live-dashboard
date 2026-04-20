@@ -114,6 +114,18 @@ status_counts = df['status'].value_counts()
 if page == "Home":
     st.title("🏏 Cricbuzz Premium Dashboard")
 
+    st.markdown("""
+    ### 📊 Project Overview  
+    This dashboard provides real-time cricket analytics using API data and SQL-based insights.  
+    It includes live match tracking, performance analysis, and player management features.
+    
+    ### 🚀 Key Features  
+    - Live Match Data (Auto-refresh)  
+    - Interactive Charts & KPIs  
+    - SQL-Based Analytics  
+    - CRUD Operations for Player Data  
+    """)
+
     total_matches = df['match_id'].nunique()
     total_teams = len(set(df['team1']).union(set(df['team2'])))
     total_venues = df['venue_name'].nunique()
@@ -187,7 +199,7 @@ elif page == "Analytics":
     st.markdown("---")
 
     # BAR CHARTS
-    fig3 = px.bar(team_counts, title="Matches per Team")
+    fig3 = px.bar(team_counts, title="🏏 Team Participation Analysis (Matches Played)")
     st.plotly_chart(fig3, use_container_width=True)
 
     fig4 = px.bar(venue_counts, title="Matches per Venue")
