@@ -17,7 +17,7 @@ def get_base64_image(image_path):
     with open(image_path, "rb") as img_file:
         return base64.b64encode(img_file.read()).decode()
 
-img_base64 = get_base64_image(r"image.png")
+img_base64 = get_base64_image(r"D:\Internship\labmentix\cricbuzz\Coding\Cricbuzz_project\image.png")
 
 # -------------------------------
 # PREMIUM BACKGROUND + UI
@@ -74,7 +74,7 @@ p, div, label {{
 # SIDEBAR
 # -------------------------------
 st.sidebar.title("🏏 Cricbuzz Premium")
-page = st.sidebar.radio("Navigation", ["Home", "Live Matches", "Analytics"])
+page = st.sidebar.radio("Navigation", ["Home", "Live Matches", "Analytics", "Manage Players"])
 
 # -------------------------------
 # AUTO REFRESH
@@ -204,3 +204,63 @@ elif page == "Analytics":
 
     st.subheader("📋 Status Table")
     st.dataframe(status_counts.reset_index().rename(columns={'index':'Status',0:'Count'}))
+
+# -------------------------------
+# CRUD PAGE
+# -------------------------------
+elif page == "Manage Players":
+    st.title("🛠️ Manage Players (CRUD Operations)")
+
+    conn = sqlite3.connect("cricket.db", check_same_thread=False)
+    cursor = conn.cursor()
+
+    # Create Table
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS players (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT,
+        team TEXT,
+        runs INTEGER,
+        wickets INTEGER
+    )
+    """)
+    conn.commit()
+
+    # CREATE
+    st.subheader("➕ Add Player")
+    name = st.text_input("Player Name")
+    team = st.text_input("Team")
+    runs = st.number_input("Runs", min_value=0)
+    wickets = st.number_input("Wickets", min_value=0)
+
+    if st.button("Add Player"):
+        cursor.execute("INSERT INTO players (name, team, runs, wickets) VALUES (?, ?, ?, ?)",
+                       (name, team, runs, wickets))
+        conn.commit()
+        st.success("Player added!")
+
+    # READ
+    st.subheader("📋 Player Data")
+    df_players = pd.read_sql("SELECT * FROM players", conn)
+    st.dataframe(df_players, use_container_width=True)
+
+    # UPDATE
+    st.subheader("✏️ Update Player")
+    update_id = st.number_input("Enter ID", min_value=1, key="update_id")
+    new_runs = st.number_input("New Runs", min_value=0, key="new_runs")
+    new_wickets = st.number_input("New Wickets", min_value=0, key="new_wickets")
+
+    if st.button("Update Player"):
+        cursor.execute("UPDATE players SET runs=?, wickets=? WHERE id=?",
+                       (new_runs, new_wickets, update_id))
+        conn.commit()
+        st.success("Updated successfully!")
+
+    # DELETE
+    st.subheader("🗑️ Delete Player")
+    delete_id = st.number_input("Delete ID", min_value=1, key="delete_id")
+
+    if st.button("Delete Player"):
+        cursor.execute("DELETE FROM players WHERE id=?", (delete_id,))
+        conn.commit()
+        st.warning("Deleted successfully!")
