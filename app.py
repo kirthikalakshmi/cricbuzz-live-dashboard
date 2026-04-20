@@ -252,6 +252,50 @@ elif page == "Manage Players":
     st.subheader("📋 Player Records")
     df_players = pd.read_sql("SELECT * FROM players", conn)
     st.dataframe(df_players, use_container_width=True)
+    
+   # ---------------- SEARCH & FILTER ----------------
+    st.subheader("🔍 Search & Filter Players")
+
+    search = st.text_input("Search Player by Name")
+
+    teams_list = df_players["team"].dropna().unique() if not df_players.empty else []
+    selected_team_filter = st.selectbox("Filter by Team", ["All"] + list(teams_list))
+
+    filtered_players = df_players.copy()
+
+    if search:
+        filtered_players = filtered_players[filtered_players["name"].str.contains(search, case=False)]
+
+    if selected_team_filter != "All":
+        filtered_players = filtered_players[filtered_players["team"] == selected_team_filter]
+
+    st.dataframe(filtered_players, use_container_width=True)
+
+    # ---------------- MINI ANALYTICS ----------------
+st.subheader("📊 Player Performance Insights")
+
+if not df_players.empty:
+
+    col1, col2 = st.columns(2)
+
+    fig_runs = px.bar(df_players, x="name", y="runs", title="Runs by Players")
+    col1.plotly_chart(fig_runs, use_container_width=True)
+
+    fig_wickets = px.bar(df_players, x="name", y="wickets", title="Wickets by Players")
+    col2.plotly_chart(fig_wickets, use_container_width=True)
+
+    top_player = df_players.sort_values(by="runs", ascending=False).iloc[0]
+
+    st.markdown(f"""
+    <div class='metric-card'>
+        <h3>🏆 Top Performer</h3>
+        <h2>{top_player['name']}</h2>
+        <p>Runs: {top_player['runs']} | Wickets: {top_player['wickets']}</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+else:
+    st.info("No data available for analytics.")
 
     # ---------------- UPDATE ----------------
     st.subheader("✏️ Update Player")
