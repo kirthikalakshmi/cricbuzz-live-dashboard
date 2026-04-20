@@ -265,6 +265,11 @@ elif page == "Manage Players":
     df_players = pd.read_sql("SELECT * FROM players", conn)
     st.dataframe(df_players, use_container_width=True)
 
+    # ---------------- DOWNLOAD PLAYER DATA ----------------
+    if not df_players.empty:
+        csv_players = df_players.to_csv(index=False).encode('utf-8')
+        st.download_button("📥 Download Player Data", csv_players, "players.csv", "text/csv")
+
    # ---------------- SEARCH & FILTER ----------------
     st.subheader("🔍 Search & Filter Players")
 
@@ -407,7 +412,3 @@ elif page == "Manage Players":
             st.warning("⚠️ Player deleted successfully!")
     else:
         st.info("No players available to delete.")
-
-csv_players = df_players.to_csv(index=False).encode('utf-8')
-st.download_button("📥 Download Player Data", csv_players, "players.csv", "text/csv")
-
