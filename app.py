@@ -17,7 +17,7 @@ def get_base64_image(image_path):
     with open(image_path, "rb") as img_file:
         return base64.b64encode(img_file.read()).decode()
 
-img_base64 = get_base64_image(r"image.png")
+img_base64 = get_base64_image(r"D:\Internship\labmentix\cricbuzz\Coding\Cricbuzz_project\image.png")
 
 # -------------------------------
 # PREMIUM BACKGROUND + UI
@@ -252,7 +252,7 @@ elif page == "Manage Players":
     st.subheader("📋 Player Records")
     df_players = pd.read_sql("SELECT * FROM players", conn)
     st.dataframe(df_players, use_container_width=True)
-    
+
    # ---------------- SEARCH & FILTER ----------------
     st.subheader("🔍 Search & Filter Players")
 
@@ -272,30 +272,83 @@ elif page == "Manage Players":
     st.dataframe(filtered_players, use_container_width=True)
 
     # ---------------- MINI ANALYTICS ----------------
-st.subheader("📊 Player Performance Insights")
 
-if not df_players.empty:
+    # ---------------- KPI CARDS ----------------
+    st.subheader("📌 Key Player Stats")
 
-    col1, col2 = st.columns(2)
+    if not df_players.empty:
 
-    fig_runs = px.bar(df_players, x="name", y="runs", title="Runs by Players")
-    col1.plotly_chart(fig_runs, use_container_width=True)
+        total_players = len(df_players)
+        total_runs = df_players["runs"].sum()
+        total_wickets = df_players["wickets"].sum()
+        avg_runs = int(df_players["runs"].mean())
 
-    fig_wickets = px.bar(df_players, x="name", y="wickets", title="Wickets by Players")
-    col2.plotly_chart(fig_wickets, use_container_width=True)
+        c1, c2, c3, c4 = st.columns(4)
 
-    top_player = df_players.sort_values(by="runs", ascending=False).iloc[0]
+        c1.markdown(f"<div class='metric-card'><h4>Total Players</h4><h2>{total_players}</h2></div>", unsafe_allow_html=True)
+        c2.markdown(f"<div class='metric-card'><h4>Total Runs</h4><h2>{total_runs}</h2></div>", unsafe_allow_html=True)
+        c3.markdown(f"<div class='metric-card'><h4>Total Wickets</h4><h2>{total_wickets}</h2></div>", unsafe_allow_html=True)
+        c4.markdown(f"<div class='metric-card'><h4>Avg Runs</h4><h2>{avg_runs}</h2></div>", unsafe_allow_html=True)
 
-    st.markdown(f"""
-    <div class='metric-card'>
-        <h3>🏆 Top Performer</h3>
-        <h2>{top_player['name']}</h2>
-        <p>Runs: {top_player['runs']} | Wickets: {top_player['wickets']}</p>
-    </div>
-    """, unsafe_allow_html=True)
+    else:
+        st.info("No data for KPIs")
+        
+        st.subheader("📊 Player Performance Insights")
 
-else:
-    st.info("No data available for analytics.")
+        if not df_players.empty:
+
+            col1, col2 = st.columns(2)
+
+            fig_runs = px.bar(df_players, x="name", y="runs", title="Runs by Players")
+            col1.plotly_chart(fig_runs, use_container_width=True)
+
+            fig_wickets = px.bar(df_players, x="name", y="wickets", title="Wickets by Players")
+            col2.plotly_chart(fig_wickets, use_container_width=True)
+
+            top_player = df_players.sort_values(by="runs", ascending=False).iloc[0]
+
+            st.markdown(f"""
+            <div class='metric-card'>
+                <h3>🏆 Top Performer</h3>
+                <h2>{top_player['name']}</h2>
+                <p>Runs: {top_player['runs']} | Wickets: {top_player['wickets']}</p>
+            </div>
+            """, unsafe_allow_html=True)
+
+        else:
+            st.info("No data available for analytics.")
+            
+    # ---------------- PLAYER RANKING ----------------
+    st.subheader("🥇 Player Rankings")
+
+    if not df_players.empty:
+
+        df_rank = df_players.copy()
+
+        # Simple scoring formula
+        df_rank["score"] = df_rank["runs"] * 0.7 + df_rank["wickets"] * 10
+
+        df_rank = df_rank.sort_values(by="score", ascending=False)
+
+        st.dataframe(df_rank[["name", "team", "runs", "wickets", "score"]], use_container_width=True)
+
+        # Top 3 Highlight
+        st.markdown("### 🌟 Top 3 Players")
+
+        top3 = df_rank.head(3)
+
+        for i, row in top3.iterrows():
+            st.markdown(f"""
+            <div class='metric-card'>
+                <h3>#{top3.index.get_loc(i)+1} - {row['name']}</h3>
+                <p>Team: {row['team']}</p>
+                <p>Runs: {row['runs']} | Wickets: {row['wickets']}</p>
+                <p>Score: {int(row['score'])}</p>
+            </div>
+            """, unsafe_allow_html=True)
+
+    else:
+        st.info("No data for ranking")
 
     # ---------------- UPDATE ----------------
     st.subheader("✏️ Update Player")
