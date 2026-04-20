@@ -329,6 +329,11 @@ elif page == "Manage Players":
 
         else:
             st.info("No data available for analytics.")
+
+    # ---------------- BEST BATSMAN ----------------
+    if not df_players.empty:
+        best_batsman = df_players.loc[df_players['runs'].idxmax()]
+        st.success(f"🏏 Best Batsman: {best_batsman['name']} with {best_batsman['runs']} runs")
             
     # ---------------- PLAYER RANKING ----------------
     st.subheader("🥇 Player Rankings")
@@ -402,3 +407,7 @@ elif page == "Manage Players":
             st.warning("⚠️ Player deleted successfully!")
     else:
         st.info("No players available to delete.")
+
+csv_players = df_players.to_csv(index=False).encode('utf-8')
+st.download_button("📥 Download Player Data", csv_players, "players.csv", "text/csv")
+
